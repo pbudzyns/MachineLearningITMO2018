@@ -119,6 +119,7 @@ def plotData(features, prizes):
     plt.show()
 
 def plotDataAfterLearning(features, prizes, thetas, errors):
+    # TODO: Use normalization for plotting
     fig = plt.figure()
     ax = fig.add_subplot(131, projection='3d')
     ax.scatter(features[:,1], features[:,2], prizes)
