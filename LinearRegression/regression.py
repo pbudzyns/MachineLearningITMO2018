@@ -1,6 +1,7 @@
 import csv
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 import numpy as np
 import random
 
@@ -119,6 +120,7 @@ def plotData(features, prizes):
 
 
 def plotDataAfterLearning(features, mu, sigma, prizes, thetas, errors):
+    # TODO: add titles to plots
     fig = plt.figure()
     ax = fig.add_subplot(131, projection='3d')
     ax.scatter(features[:,1], features[:,2], prizes)
@@ -129,7 +131,8 @@ def plotDataAfterLearning(features, mu, sigma, prizes, thetas, errors):
     xx, yy = np.meshgrid(np.arange(x1, x2), np.arange(y1, y2))
     ax2=fig.add_subplot(132, projection='3d')
     ax2.scatter(features[:,1], features[:,2], prizes)
-    ax2.plot_surface(xx, yy, thetas[2]*(xx-mu[0])/sigma[0]+thetas[1]*(yy-mu[1])/sigma[1]+thetas[0])
+    ax2.plot_surface(xx, yy, thetas[2]*(xx-mu[0])/sigma[0]+thetas[1]*(yy-mu[1])/sigma[1]+thetas[0],
+                     color='y')
 
     ax3 = fig.add_subplot(133)
     ax3.plot(errors)
@@ -147,10 +150,12 @@ if __name__ == "__main__":
     #print(np.dot(features_normalized,thetas) - prizes)
     print(mu, sigma)
     thetas, errors = gradientDescent(features_normalized, thetas, prizes, 0.01, 1500)
-
+    # TODO: concole menu implementation
     plotDataAfterLearning(features, mu, sigma, prizes, thetas, errors)
     # 2104,3,399900
     print(prediction(2104, 3, thetas, mu, sigma), 'correct: 399900')
     # 4478,5,699900
     print(prediction(4478, 5, thetas, mu, sigma), 'correct: 699900')
+
+
 
