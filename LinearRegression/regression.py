@@ -93,7 +93,6 @@ def gradientDescentStep(features, thetas, results, alpha=0.01):
     #print(features*thetas)
     #print('RESULTS:\n\n', np.dot(features, thetas))
     y = np.dot(features, thetas) - results
-    print(y[0])
     error = np.dot(y, y.T)/(2/m)
     dTheta = (alpha/m) * np.dot(features.T, np.dot(features, thetas)-results)
     resultThetas -= dTheta
@@ -118,19 +117,19 @@ def plotData(features, prizes):
 
     plt.show()
 
-def plotDataAfterLearning(features, prizes, thetas, errors):
-    # TODO: Use normalization for plotting
+
+def plotDataAfterLearning(features, mu, sigma, prizes, thetas, errors):
     fig = plt.figure()
     ax = fig.add_subplot(131, projection='3d')
     ax.scatter(features[:,1], features[:,2], prizes)
 
     x1, x2 = np.min(features[:,1]), np.max(features[:,1])
-    y1, y2 = np.min(features[:,2]), np.max(features[:,2])
+    y1, y2 = np.min(features[:,2]), np.max(features[:,2])+1
 
     xx, yy = np.meshgrid(np.arange(x1, x2), np.arange(y1, y2))
     ax2=fig.add_subplot(132, projection='3d')
     ax2.scatter(features[:,1], features[:,2], prizes)
-    ax2.plot_surface(xx, yy, thetas[2]*xx+thetas[1]*yy)
+    ax2.plot_surface(xx, yy, thetas[2]*(xx-mu[0])/sigma[0]+thetas[1]*(yy-mu[1])/sigma[1]+thetas[0])
 
     ax3 = fig.add_subplot(133)
     ax3.plot(errors)
@@ -146,9 +145,10 @@ if __name__ == "__main__":
     features_normalized, mu, sigma = normalize_features(features)
     #print(np.shape(features_normalized))
     #print(np.dot(features_normalized,thetas) - prizes)
+    print(mu, sigma)
     thetas, errors = gradientDescent(features_normalized, thetas, prizes, 0.01, 1500)
 
-    plotDataAfterLearning(features_normalized, prizes, thetas, errors)
+    plotDataAfterLearning(features, mu, sigma, prizes, thetas, errors)
     # 2104,3,399900
     print(prediction(2104, 3, thetas, mu, sigma), 'correct: 399900')
     # 4478,5,699900
