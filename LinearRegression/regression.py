@@ -49,8 +49,19 @@ def getError(prediction, real_values):
     return sum(prediction - real_values)
 
 
-def gradientDescent():
-    pass
+def gradientDescent(features, thetas, results, learningRate,  nIter):
+    resultThetas = thetas[:]
+
+    for i in range(nIter):
+        error = np.dot(features, resultThetas) - results
+        #print('error: ', np.shape(error))
+        #print('features, ', np.shape(features))
+        dTheta = (-learningRate)*np.dot(error, features)
+        resultThetas += dTheta
+        print(resultThetas)
+
+
+    return resultThetas
 
 
 def plotData(features, prizes):
@@ -68,9 +79,11 @@ def plotData(features, prizes):
 if __name__ == "__main__":
     features, prizes = load_data('prices.txt')
 
-    plotData(features, prizes)
+    #plotData(features, prizes)
     thetas = getThetas(np.shape(features)[1])
     predictions = regression(features, thetas)
     prizes = prizes/1000
     print(getError(predictions, prizes))
+    print(thetas)
+    gradientDescent(features, thetas, prizes, 0.001, 10)
 
