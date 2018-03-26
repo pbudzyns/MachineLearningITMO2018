@@ -82,7 +82,7 @@ def gradientDescent(features, thetas, results, alpha=0.01,  maxIter=1000, maxErr
         resultThetas, error = gradientDescentStep(features, resultThetas, results, alpha)
         errors.append(abs(error))
         maxIter -= 1
-        print(resultThetas)
+        #print(resultThetas)
 
     return resultThetas, errors
 
@@ -92,9 +92,10 @@ def gradientDescentStep(features, thetas, results, alpha=0.01):
     m = len(features)
     #print(features*thetas)
     #print('RESULTS:\n\n', np.dot(features, thetas))
-    y = np.dot(features, thetas)# - results
+    y = np.dot(features, thetas) - results
+    print(y[0])
     error = np.dot(y, y.T)/(2/m)
-    dTheta = alpha/m * np.dot(features.T, np.dot(features, thetas)-results)
+    dTheta = (alpha/m) * np.dot(features.T, np.dot(features, thetas)-results)
     resultThetas -= dTheta
     #print(error)
     return resultThetas, error
@@ -144,8 +145,11 @@ if __name__ == "__main__":
     features_normalized, mu, sigma = normalize_features(features)
     #print(np.shape(features_normalized))
     #print(np.dot(features_normalized,thetas) - prizes)
-    thetas, errors = gradientDescent(features_normalized, thetas, prizes, 0.001, 1500)
+    thetas, errors = gradientDescent(features_normalized, thetas, prizes, 0.01, 1500)
 
     plotDataAfterLearning(features_normalized, prizes, thetas, errors)
-    print(prediction(2104, 3, thetas, mu, sigma))
+    # 2104,3,399900
+    print(prediction(2104, 3, thetas, mu, sigma), 'correct: 399900')
+    # 4478,5,699900
+    print(prediction(4478, 5, thetas, mu, sigma), 'correct: 699900')
 
