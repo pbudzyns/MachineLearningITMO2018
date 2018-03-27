@@ -26,8 +26,8 @@ def load_data(filename):
             data.append([int(x) for x in value])
 
         dataArray = np.array(data)
-        features = dataArray[:,:2]
-        prices = dataArray[:,-1]
+        features = dataArray[:, :2]
+        prices = dataArray[:, -1]
 
         N = np.shape(features)[0]
         # Add ones column
@@ -66,7 +66,7 @@ def normalize_features(features):
     return features_normalized, means, sigmas
 
 
-def gradientDescent(features, thetas, results, alpha=0.01,  maxIter=1000, maxError=1):
+def gradientDescent(features, thetas, results, alpha=0.01, maxIter=1000, maxError=1):
     resultThetas = thetas[:]
     errors = []
     resultThetas, error = gradientDescentStep(features, resultThetas, results, alpha)
@@ -103,11 +103,11 @@ def makePrediction(area, rooms, thetas, mu, sigma):
 def plotData(features, prices):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(features[:,0], features[:,1], prices)
+    ax.scatter(features[:, 0], features[:, 1], prices)
 
     ax.set_xlabel('area')
     ax.set_ylabel('rooms')
-    ax.set_zlabel('prize')
+    ax.set_zlabel('price')
 
     plt.show()
 
@@ -119,7 +119,7 @@ def plotDataAfterLearning(features, means, sigmas, prices, thetas, errors):
     ax.scatter(features[:,1], features[:,2], prices)
     ax.set_xlabel('area')
     ax.set_ylabel('rooms')
-    ax.set_zlabel('prize')
+    ax.set_zlabel('price')
     ax.set_title('Given data')
 
     x1, x2 = np.min(features[:, 1]), np.max(features[:, 1])
@@ -132,7 +132,7 @@ def plotDataAfterLearning(features, means, sigmas, prices, thetas, errors):
                      color='y')
     ax2.set_xlabel('area')
     ax2.set_ylabel('rooms')
-    ax2.set_zlabel('prize')
+    ax2.set_zlabel('price')
     ax2.set_title('Data with result plane')
 
     ax3 = fig.add_subplot(133)
