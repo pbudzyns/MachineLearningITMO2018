@@ -27,15 +27,17 @@ def load_data(filename):
 
         dataArray = np.array(data)
         features = dataArray[:,:2]
-        prizes = dataArray[:,-1]
+        prices = dataArray[:,-1]
 
         N = np.shape(features)[0]
+        # Add ones column
         features2 = np.c_[np.ones([N, 1]), features]
 
-    return np.array(features2), prizes
+    return np.array(features2), prices
 
 
 def getThetas(n):
+    # Initialize theta with random values
     a = 1/(2*n)
     thetas = [random.random()*2*a-a for i in range(n)]
     return np.array(thetas)
@@ -46,45 +48,33 @@ def normalize(data):
     sigma = np.std(data)
     return (data - mean)/sigma, mean, sigma
 
+
 def normalize_features(features):
     n, m = np.shape(features)
-    sigma = []
-    mu = []
+    sigmas = []
+    means = []
     _features = []
+
     for i in range(1, m):
         data, _mu, _sigma = normalize(features[:, i])
         _features.append(data)
-        sigma.append(_sigma)
-        mu.append(_mu)
+        sigmas.append(_sigma)
+        means.append(_mu)
 
-    #print(np.shape(np.array(_features).T))
+    # Transform result lists into one array with ones column
     features_normalized = np.c_[np.ones([n, 1]), np.array(_features).T]
-    #print(np.shape(features_normalized))
-    return features_normalized, mu, sigma
-
-
-def regression(features, thetas):
-    return np.dot(features,thetas)
-
-
-def getError(prediction, real_values):
-    return sum(prediction - real_values)
+    return features_normalized, means, sigmas
 
 
 def gradientDescent(features, thetas, results, alpha=0.01,  maxIter=1000, maxError=1):
     resultThetas = thetas[:]
     errors = []
-    #print(np.dot(features, thetas))
-    #for i in range(nIter):
-    #    resultThetas, e = gradientDescentStep(features, resultThetas, results, alpha)
-    #    errors.append(e)
     resultThetas, error = gradientDescentStep(features, resultThetas, results, alpha)
 
     while abs(error) > maxError and maxIter:
         resultThetas, error = gradientDescentStep(features, resultThetas, results, alpha)
         errors.append(abs(error))
         maxIter -= 1
-        #print(resultThetas)
 
     return resultThetas, errors
 
@@ -95,23 +85,25 @@ def gradientDescentStep(features, thetas, results, alpha=0.01):
     #print(features*thetas)
     #print('RESULTS:\n\n', np.dot(features, thetas))
     y = np.dot(features, thetas) - results
-    error = np.dot(y, y.T)/(2/m)
-    dTheta = (alpha/m) * np.dot(features.T, np.dot(features, thetas)-results)
+    #error = np.dot(y, y.T)#/(2/m)
+    error = sum(y)
+    #dTheta = (alpha/m) * np.dot(features.T, np.dot(features, thetas)-results)
+    dTheta = (alpha) * np.dot(features.T, np.dot(features, thetas)-results)
     resultThetas -= dTheta
     #print(error)
     return resultThetas, error
 
 
-def prediction(area, rooms, thetas, mu, sigma):
+def makePrediction(area, rooms, thetas, mu, sigma):
     _x = (area - mu[0])/sigma[0]
     _y = (rooms - mu[1])/sigma[1]
     return thetas[0]+thetas[1]*_x+thetas[2]*_y
 
 
-def plotData(features, prizes):
+def plotData(features, prices):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(features[:,0], features[:,1], prizes)
+    ax.scatter(features[:,0], features[:,1], prices)
 
     ax.set_xlabel('area')
     ax.set_ylabel('rooms')
@@ -120,23 +112,32 @@ def plotData(features, prizes):
     plt.show()
 
 
-def plotDataAfterLearning(features, mu, sigma, prizes, thetas, errors):
+def plotDataAfterLearning(features, means, sigmas, prices, thetas, errors):
     # TODO: add titles to plots
     fig = plt.figure()
     ax = fig.add_subplot(131, projection='3d')
-    ax.scatter(features[:,1], features[:,2], prizes)
+    ax.scatter(features[:,1], features[:,2], prices)
+    ax.set_xlabel('area')
+    ax.set_ylabel('rooms')
+    ax.set_zlabel('prize')
+    ax.set_title('Given data')
 
-    x1, x2 = np.min(features[:,1]), np.max(features[:,1])
-    y1, y2 = np.min(features[:,2]), np.max(features[:,2])+1
+    x1, x2 = np.min(features[:, 1]), np.max(features[:, 1])
+    y1, y2 = np.min(features[:, 2]), np.max(features[:, 2])+1
 
     xx, yy = np.meshgrid(np.arange(x1, x2), np.arange(y1, y2))
     ax2=fig.add_subplot(132, projection='3d')
-    ax2.scatter(features[:,1], features[:,2], prizes)
-    ax2.plot_surface(xx, yy, thetas[2]*(xx-mu[0])/sigma[0]+thetas[1]*(yy-mu[1])/sigma[1]+thetas[0],
+    ax2.scatter(features[:, 1], features[:, 2], prices)
+    ax2.plot_surface(xx, yy, thetas[2]*(xx - means[0])/sigmas[0] + thetas[1]*(yy - means[1])/sigmas[1] + thetas[0],
                      color='y')
+    ax2.set_xlabel('area')
+    ax2.set_ylabel('rooms')
+    ax2.set_zlabel('prize')
+    ax2.set_title('Data with result plane')
 
     ax3 = fig.add_subplot(133)
     ax3.plot(errors)
+    ax3.set_title('Errors')
     plt.show()
 
 
@@ -145,46 +146,43 @@ def printMenu():
     print('\tt - start training')
     print('\tp - show plots')
     print('\tk - make prediction')
-    print('\tq - quit')
+    print('\tq - quit\n')
 
 
-def main():
+def startTraining(features, prices):
+    thetas = getThetas(np.shape(features)[1])
+    features_normalized, mu, sigma = normalize_features(features)
+    thetas, errors = gradientDescent(features_normalized, thetas, prices, 0.01, 350)
+
+    return thetas, mu, sigma, errors
+
+
+def main(data_filename):
+    printMenu()
+    features, prices = load_data(data_filename)
+    mu, sigma, thetas, errors = [], [], [], []
     while True:
-        os.system('clear')
-        printMenu()
         try:
             opt = input('What to do: ')
             if opt == 't':
-                pass
+                thetas, mu, sigma, errors = startTraining(features, prices)
+                print('Training finished...')
+                print('Final equation: %.2f*area + %.2f*rooms + %.2f'%(thetas[1], thetas[2], thetas[0]))
             elif opt == 'p':
-                pass
+                plotDataAfterLearning(features, mu, sigma, prices, thetas, errors)
             elif opt == 'k':
-                area = input('Area: ')
-                rooms = input('Rooms: ')
+                area = int(input('Area: '))
+                rooms = int(input('Rooms: '))
+                prize = round(makePrediction(area, rooms, thetas, mu, sigma), 2)
+                print('Predicted prize: ', prize)
             elif opt == 'q':
                 break
         except KeyboardInterrupt:
             break
 
+
 if __name__ == "__main__":
-    # features, prizes = load_data('prices.txt')
-    #
-    # #plotData(features, prizes)
-    # thetas = getThetas(np.shape(features)[1])
-    # #thetas = np.zeros(np.shape(features)[1])
-    #
-    # features_normalized, mu, sigma = normalize_features(features)
-    # #print(np.shape(features_normalized))
-    # #print(np.dot(features_normalized,thetas) - prizes)
-    # print(mu, sigma)
-    # thetas, errors = gradientDescent(features_normalized, thetas, prizes, 0.01, 1500)
-    # # TODO: concole menu implementation
-    # plotDataAfterLearning(features, mu, sigma, prizes, thetas, errors)
-    # # 2104,3,399900
-    # print(prediction(2104, 3, thetas, mu, sigma), 'correct: 399900')
-    # # 4478,5,699900
-    # print(prediction(4478, 5, thetas, mu, sigma), 'correct: 699900')
-    main()
+    main('prices.txt')
 
 
 
