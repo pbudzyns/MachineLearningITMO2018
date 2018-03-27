@@ -78,6 +78,8 @@ def test(knn, k, kernel, distance, points, labels, test_points, test_labels):
     predicted_positive = 0
     actual_positive = sum(test_labels)
 
+    # TODO: Check if Fscore implementation is correct
+
     for test_point, test_label in zip(test_points, test_labels):
         predicted_class = knn(k, test_point, points, labels, distance, kernel)
         if predicted_class == 1:
