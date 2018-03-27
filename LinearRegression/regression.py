@@ -4,6 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 import numpy as np
 import random
+import os
 
 """Second task. Linear regression homework.
 It is required to retrieve the coefficients of linear regression by one of the two ways: 
@@ -138,24 +139,52 @@ def plotDataAfterLearning(features, mu, sigma, prizes, thetas, errors):
     ax3.plot(errors)
     plt.show()
 
+
+def printMenu():
+    print('+++++++++\tLinear regression\t+++++++++++')
+    print('\tt - start training')
+    print('\tp - show plots')
+    print('\tk - make prediction')
+    print('\tq - quit')
+
+
+def main():
+    while True:
+        os.system('clear')
+        printMenu()
+        try:
+            opt = input('What to do: ')
+            if opt == 't':
+                pass
+            elif opt == 'p':
+                pass
+            elif opt == 'k':
+                area = input('Area: ')
+                rooms = input('Rooms: ')
+            elif opt == 'q':
+                break
+        except KeyboardInterrupt:
+            break
+
 if __name__ == "__main__":
-    features, prizes = load_data('prices.txt')
-
-    #plotData(features, prizes)
-    thetas = getThetas(np.shape(features)[1])
-    #thetas = np.zeros(np.shape(features)[1])
-
-    features_normalized, mu, sigma = normalize_features(features)
-    #print(np.shape(features_normalized))
-    #print(np.dot(features_normalized,thetas) - prizes)
-    print(mu, sigma)
-    thetas, errors = gradientDescent(features_normalized, thetas, prizes, 0.01, 1500)
-    # TODO: concole menu implementation
-    plotDataAfterLearning(features, mu, sigma, prizes, thetas, errors)
-    # 2104,3,399900
-    print(prediction(2104, 3, thetas, mu, sigma), 'correct: 399900')
-    # 4478,5,699900
-    print(prediction(4478, 5, thetas, mu, sigma), 'correct: 699900')
+    # features, prizes = load_data('prices.txt')
+    #
+    # #plotData(features, prizes)
+    # thetas = getThetas(np.shape(features)[1])
+    # #thetas = np.zeros(np.shape(features)[1])
+    #
+    # features_normalized, mu, sigma = normalize_features(features)
+    # #print(np.shape(features_normalized))
+    # #print(np.dot(features_normalized,thetas) - prizes)
+    # print(mu, sigma)
+    # thetas, errors = gradientDescent(features_normalized, thetas, prizes, 0.01, 1500)
+    # # TODO: concole menu implementation
+    # plotDataAfterLearning(features, mu, sigma, prizes, thetas, errors)
+    # # 2104,3,399900
+    # print(prediction(2104, 3, thetas, mu, sigma), 'correct: 399900')
+    # # 4478,5,699900
+    # print(prediction(4478, 5, thetas, mu, sigma), 'correct: 699900')
+    main()
 
 
 
