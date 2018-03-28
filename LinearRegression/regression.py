@@ -81,9 +81,6 @@ def gradientDescent(features, thetas, results, alpha=0.01, maxIter=1000, maxErro
 
 def gradientDescentStep(features, thetas, results, alpha=0.01):
     resultThetas = thetas[:]
-    m = len(features)
-    #print(features*thetas)
-    #print('RESULTS:\n\n', np.dot(features, thetas))
     y = np.dot(features, thetas) - results
     #error = np.dot(y, y.T)#/(2/m)
     error = sum(y)
@@ -149,10 +146,10 @@ def printMenu():
     print('\tq - quit\n')
 
 
-def startTraining(features, prices):
+def startTraining(features, prices, numIter):
     thetas = getThetas(np.shape(features)[1])
     features_normalized, mu, sigma = normalize_features(features)
-    thetas, errors = gradientDescent(features_normalized, thetas, prices, 0.01, 350)
+    thetas, errors = gradientDescent(features_normalized, thetas, prices, 0.01, numIter)
 
     return thetas, mu, sigma, errors
 
@@ -165,7 +162,8 @@ def main(data_filename):
         try:
             opt = input('What to do: ')
             if opt == 't':
-                thetas, mu, sigma, errors = startTraining(features, prices)
+                iterNum = int(input('Number of iter.: '))
+                thetas, mu, sigma, errors = startTraining(features, prices, iterNum)
                 print('Training finished...')
                 print('Final equation: %.2f*area + %.2f*rooms + %.2f'%(thetas[1], thetas[2], thetas[0]))
             elif opt == 'p':
