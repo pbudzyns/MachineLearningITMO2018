@@ -141,7 +141,7 @@ def printMenu():
 
 def get_k_and_kernel():
     k = int(input('Neighbor number: '))
-    kernel = input('Kernel: ')
+    kernel = input('Kernel [euc, lin, gaus]: ')
     return k, kernel
 
 
