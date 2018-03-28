@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 from queue import PriorityQueue
 from sklearn.model_selection import train_test_split
+import sklearn as skl
 import numpy as np
 import csv
 
@@ -60,12 +61,10 @@ def plot_after_training(points, test_points, labels, test_labels, predicted_labe
 
 
 def split_data(points, labels, percent):
-    # data = [(x, y, l) for x, y, l in zip(points, labels)]
     return train_test_split(points, labels, test_size=percent)
 
 
-def euclidean_distance(a_point, b_point):
-    return ((a_point[0]-b_point[0])**2 + (a_point[1]-b_point[1])**2)**(1/2)
+
 
 
 def null_kernel(distance):
@@ -100,6 +99,7 @@ def test_knn(k, kernel, points, labels, test_points, test_labels):
     predicted_positive = 0
     actual_positive = sum(test_labels)
     predicted_labels = []
+    correctly_predicted = 0
 
     # TODO: Check if Fscore implementation is correct
     for test_point, test_label in zip(test_points, test_labels):
@@ -108,10 +108,13 @@ def test_knn(k, kernel, points, labels, test_points, test_labels):
             predicted_positive += 1
         if predicted_class == 1 and test_label == 1:
             true_positive += 1
+        if predicted_class == test_label:
+            correctly_predicted += 1
 
         predicted_labels.append(predicted_class)
 
-    Fscore = round(get_f_score(true_positive, predicted_positive, actual_positive), 2)
+    #Fscore = round(get_f_score(true_positive, predicted_positive, actual_positive), 2)
+    Fscore = round(correctly_predicted/len(test_labels), 2)
 
     result = " {} | Neighbours number: {} | Result: {}".format(kernel.__name__, k, Fscore)
 
@@ -142,13 +145,32 @@ def get_k_and_kernel():
     return k, kernel
 
 
+def euc(x, y):
+    return ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2) ** (1 / 2)
+
+
+def lin(x, y):
+    val = skl.metrics.pairwise.linear_kernel([x], [y])[0][0]
+    return val
+
+
+def gaus(x, y):
+    val = skl.metrics.pairwise.sigmoid_kernel([x], [y], gamma=0.1, coef0=0)[0][0]
+    return val
+
+
 def get_kernel(kernel_name):
-    kernel = lambda x: x
-    return euclidean_distance
+    kernel = None
+    for func in [euc, lin, gaus]:
+        if kernel_name == func.__name__:
+            kernel = func
+            break
+    return kernel
 
 
 def main(filename):
     base_points, base_labels = read_data(filename)
+    points, labels = base_points[:], base_labels[:]
     test_points, test_labels = [], []
     printMenu()
     while True:
@@ -164,12 +186,18 @@ def main(filename):
         elif opt == 's':
             percent = float(input('Test data percent: '))
             points, test_points, labels, test_labels = split_data(base_points, base_labels, percent)
+        elif opt == 'm':
+            kernel = None
+            while not kernel:
+                kernel_name = input('K: ')
+                kernel = get_kernel(kernel_name)
+            print(kernel(points[0], points[1]))
         elif opt == 'q':
             break
 
 
 def find_best(points, test_points, labels, test_labels, k_max, kernel):
-    best_F = 0
+    best_F = -1
     best_result = ''
     for k in range(1, k_max):
         _p, F1, result = test_knn(k, kernel, points, labels, test_points, test_labels)
