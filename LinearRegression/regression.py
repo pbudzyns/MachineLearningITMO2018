@@ -40,25 +40,23 @@ def load_data(filename):
     # X = features
     # y = prices
     # thet = lr.fit(X, y)
-    # other_X = [1, 1]
-    # res = lr.predict([other_X])
-    # print(res)
+
+    return np.array(features2), prices
 
 
-
-    # print(type(features2))
-    tmp = np.dot(features2.T, features2)
-    tmp2 = (np.dot(np.linalg.inv(tmp), features2.T))
-    # print(np.dot(tmp2, prices), 'Matrix method results\n\n')
+def get_thetas_from_matrix_meth(features, prices):
+    tmp = np.dot(features.T, features)
+    tmp2 = (np.dot(np.linalg.inv(tmp), features.T))
     matrix_thetas = np.dot(tmp2, prices)
-    return np.array(features2), prices, matrix_thetas
+    # print(np.dot(tmp2, prices), 'Matrix method results\n\n')
+    return matrix_thetas
 
 
 def getThetas(n):
     # Initialize theta with random values
     a = 1/(2*n)
-    # thetas = [random.random()*2*a-a for i in range(n)]
-    thetas = np.zeros(n)
+    thetas = [random.random()*2*a-a for i in range(n)]
+    # thetas = np.zeros(n)
     return np.array(thetas)
 
 
@@ -100,7 +98,7 @@ def normalize_features(features):
     return features_normalized, means, sigmas
 
 
-def gradientDescent(features, thetas, results, alpha=0.12, maxIter=1000, stopDelta = 0.01):
+def gradientDescent(features, thetas, results, alpha=0.01, maxIter=1000, stopDelta = 0.01):
     resultThetas = thetas[:]
     errors = []
     resultThetas, error = gradientDescentStep(features, resultThetas, results, alpha)
@@ -126,7 +124,7 @@ def gradientDescentStep(features, thetas, results, alpha):
     # print(thetas)
     # dTheta = (alpha) * np.dot(features.T, np.dot(features, thetas)-results)
     # print(features[0])
-    print(np.dot(features, thetas)[0])
+    # print(np.dot(features, thetas)[0])
     dTheta = (alpha) * np.dot(features.T, np.dot(features, thetas) - results)
     resultThetas -= dTheta
     #print(error)
@@ -152,9 +150,6 @@ def plotData(features, prices):
 
 
 def plotDataAfterLearning(features, means, sigmas, prices, thetas, errors, matrix_thetas):
-    # TODO: add titles to plots
-    # print(features[0])
-    # print(matrix_thetas)
     fig = plt.figure()
     ax = fig.add_subplot(141, projection='3d')
     ax.scatter(features[:,1], features[:,2], prices)
@@ -211,8 +206,8 @@ def startTraining(features, prices, numIter, delta):
 
 def main(filename):
     printMenu()
-    features, prices, matrix_thetas = load_data(filename)
-    # print(features[0])
+    features, prices = load_data(filename)
+    matrix_thetas = get_thetas_from_matrix_meth(features, prices)
     mu, sigma, thetas, errors = [], [], [], []
     while True:
         try:
@@ -226,7 +221,6 @@ def main(filename):
                 print('Matrix method res: %.2f*area + %.2f*rooms + %.2f'%(matrix_thetas[1], matrix_thetas[2], matrix_thetas[0]))
             elif opt == 'p':
                 # plotDataAfterLearning(features, mu, sigma, prices, thetas, errors)
-                print(features[0])
                 plotDataAfterLearning(features, mu, sigma, prices, thetas, errors, matrix_thetas)
             elif opt == 'k':
                 area = int(input('Area: '))
