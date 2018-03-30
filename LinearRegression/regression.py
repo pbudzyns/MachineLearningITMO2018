@@ -170,7 +170,7 @@ def plotDataAfterLearning(features, means, sigmas, prices, thetas, errors, matri
     xx, yy = np.meshgrid(np.arange(x1, x2), np.arange(y1, y2))
     ax2=fig.add_subplot(142, projection='3d')
     ax2.scatter(features[:, 1], features[:, 2], prices)
-    ax2.plot_surface(xx, yy, thetas[1]*(xx - means[0])/sigmas[0] + thetas[2]*(yy - means[1])/sigmas[1] + thetas[0], color='b')
+    ax2.plot_surface(xx, yy, makePrediction(xx, yy, thetas, means, sigmas), color='b')
     # ax2.plot_surface(xx, yy, thetas[1]*xx + thetas[2]*yy + thetas[0], color='y')
     ax2.set_xlabel('area')
     ax2.set_ylabel('rooms')
