@@ -105,10 +105,12 @@ def gradientDescent(features, thetas, results, alpha=0.01, maxIter=1000, stopDel
     errors.append(error)
     currentError = 0
 
-    while abs(error - currentError) > stopDelta and maxIter :
+    while abs(error - currentError) > stopDelta and maxIter:
+        currentError = errors[-1]
         resultThetas, error = gradientDescentStep(features, resultThetas, results, alpha)
         errors.append(abs(error))
         maxIter -= 1
+    # print(maxIter)
 
     return resultThetas, errors
 
@@ -218,7 +220,7 @@ def main(filename):
                 thetas, mu, sigma, errors = startTraining(features, prices, iterNum, delta)
                 print('Training finished...')
                 print('Final equation: %.2f*area + %.2f*rooms + %.2f'%(thetas[1], thetas[2], thetas[0]))
-                print('Matrix method res: %.2f*area + %.2f*rooms + %.2f'%(matrix_thetas[1], matrix_thetas[2], matrix_thetas[0]))
+                # print('Matrix method res: %.2f*area + %.2f*rooms + %.2f'%(matrix_thetas[1], matrix_thetas[2], matrix_thetas[0]))
             elif opt == 'p':
                 # plotDataAfterLearning(features, mu, sigma, prices, thetas, errors)
                 plotDataAfterLearning(features, mu, sigma, prices, thetas, errors, matrix_thetas)
