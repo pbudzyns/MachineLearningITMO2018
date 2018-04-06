@@ -4,7 +4,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 import numpy as np
 import random
-import os
 from sklearn.linear_model import LinearRegression
 
 
@@ -67,23 +66,6 @@ def normalize(data):
 
 
 def normalize_features(features):
-    # n, m = np.shape(features)
-    # sigmas = []
-    # means = []
-    # _features = []
-    # for i in range(1, m):
-    #     data, _mu, _sigma = normalize(features[1:, i])
-    #     _features.append(data)
-    #     sigmas.append(_sigma)
-    #     means.append(_mu)
-    #     print(data)
-    # print('feat')
-    # print((features[0]-np.mean(features))/np.std(features))
-    # print('_feat')
-    # tmp = np.array(_features).T
-    # print(tmp[0])
-    # Transform result lists into one array with ones column
-    # features_normalized = np.c_[np.ones([n, 1]), np.array(_features).T]
     features_normalized = np.ones(np.shape(features))
     area_mean = np.mean(features[:,1])
     area_std = np.std(features[:,1])
@@ -118,18 +100,9 @@ def gradientDescent(features, thetas, results, alpha=0.01, maxIter=1000, stopDel
 def gradientDescentStep(features, thetas, results, alpha):
     resultThetas = thetas[:]
     y = np.dot(features, thetas) - results
-    m = len(results)
-    error = np.dot(y, y.T) # /(2*m)
-    # error = sum(y)
-    #dTheta = (alpha/m) * np.dot(features.T, np.dot(features, thetas)-results)
-    # print(features[0])
-    # print(thetas)
-    # dTheta = (alpha) * np.dot(features.T, np.dot(features, thetas)-results)
-    # print(features[0])
-    # print(np.dot(features, thetas)[0])
+    error = np.dot(y, y.T)
     dTheta = (alpha) * np.dot(features.T, np.dot(features, thetas) - results)
     resultThetas -= dTheta
-    #print(error)
     return resultThetas[:], error
 
 
@@ -222,7 +195,6 @@ def main(filename):
                 print('Final equation: %.2f*area + %.2f*rooms + %.2f'%(thetas[1], thetas[2], thetas[0]))
                 # print('Matrix method res: %.2f*area + %.2f*rooms + %.2f'%(matrix_thetas[1], matrix_thetas[2], matrix_thetas[0]))
             elif opt == 'p':
-                # plotDataAfterLearning(features, mu, sigma, prices, thetas, errors)
                 plotDataAfterLearning(features, mu, sigma, prices, thetas, errors, matrix_thetas)
             elif opt == 'k':
                 area = int(input('Area: '))
@@ -238,8 +210,5 @@ def main(filename):
 
 if __name__ == "__main__":
     main(filename='prices.txt')
-    # features, prizes = load_data('prices.txt')
-    # features_normal, means, sigmas = normalize_features(features)
-    # print(features_normal[0])
 
 
