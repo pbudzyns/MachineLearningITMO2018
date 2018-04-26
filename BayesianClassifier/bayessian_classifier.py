@@ -1,5 +1,9 @@
-import numpy
-import scipy
+import numpy as np
+import scipy.stats
+import glob
+from pandas import DataFrame
+import copy
+from pprint import pprint
 
 
 """ The third lab will be devoted to the naive Bayesian classifier.
@@ -19,6 +23,205 @@ with it.
 
 For writing the classifier it is allowed to use numpy, scipy and pandas. Cross-validation can be done by any library."""
 
+def readEmail(filename):
+    target = 'spam' if 'spmsg' in filename else 'legit'
+    with open(filename, 'r') as f:
+        subject = [int(word) for word in f.readline().replace('Subject: ', '').replace('\n', '').split()]
+        f.readline()
+        body = [int(word) for word in f.readline().split()]
+
+    return target, subject, body
+
+
+def readFolder(path):
+    emails = {'target': [], 'subject': [], 'body': []}
+    filenames = glob.glob(path + '*.txt')
+    for filename in filenames:
+        target, subject, body = readEmail(filename)
+        emails['target'].append(target)
+        emails['subject'].append(subject)
+        emails['body'].append(body)
+
+    return DataFrame(emails)
+
+
+def getDatasets(path):
+    folders = ['part%d'%i for i in range(1,11)]
+    dataset = {}
+    for folder in folders:
+        dataset[folder] = readFolder(path + folder + '/')
+
+    return dataset
+
+
+def getWordsFrequencies(words):
+    frequencies = {}
+    for word in words:
+        if word in frequencies.keys():
+            frequencies[word] += 1
+        else:
+            frequencies[word] = 1
+    return frequencies
+
+
+def getWrodsTableFrequencies(table):
+    table_frequencies = {}
+    # summary = {}
+
+    for words in table:
+        frequencies = getWordsFrequencies(words)
+        for key, val in frequencies.items():
+            if key in table_frequencies.keys():
+                table_frequencies[key].append(val)
+            else:
+                table_frequencies[key] = [val]
+
+    return table_frequencies
+
+
+def mergeDictionaries(dic1, dic2):
+    result = copy.deepcopy(dic1)
+    for key, val in dic2.items():
+        if key in result.keys():
+            result[key].extend(val)
+        else:
+            result[key] = val
+    return result
+
+
+def prepareDataset(dataset, column='body'):
+    parts = ['part%d' % i for i in range(1, 11)]
+
+    frequencies = dict()
+
+    frequencies['spam'] = getClassFrequencies(column, dataset, parts, 'spam')
+    frequencies['legit'] = getClassFrequencies(column, dataset, parts, 'legit')
+
+    return frequencies
+
+
+def getClassFrequencies(column, dataset, parts, target):
+    frequencies = {}
+
+    for part in parts:
+        data = dataset[part].loc[dataset[part]['target'] == target]
+        frequencies[part] = getWrodsTableFrequencies(data[column])
+        #res_frequencies = mergeDictionaries(res_frequencies, frequencies)
+
+    return frequencies
+
+
+def sumarize(frequencies):
+    summarized = {}
+    for key, val in frequencies.items():
+        summarized[key] = (np.mean(val), np.std(val))
+    return summarized
+
+
+def getProbability(x, mu, sigma):
+    if sigma == 0:
+        return 1
+    prob = scipy.stats.norm(mu, sigma).pdf(x)
+    return prob
+
+
+def classMembershipProbab(test_freq, learning_data):
+    probability = 1
+    for word, freq in test_freq.items():
+        mu, sigma = learning_data.get(word, (1, 1))
+        probability *= getProbability(freq, mu, sigma)
+    return probability
+
+
+def getProbabilities(email, learning_dataset):
+    spam_class_freq = learning_dataset[0]
+    legit_class_freq = learning_dataset[1]
+    probabilities = {}
+
+    email_freq = getWordsFrequencies(email)
+
+    probabilities['spam'] = classMembershipProbab(email_freq, spam_class_freq)
+    probabilities['legit'] = classMembershipProbab(email_freq, legit_class_freq)
+
+    return probabilities
+
+
+def predict(subject, body, learning_frequencies_subject, learning_frequencies_body):
+    probab_subject = getProbabilities(subject, learning_frequencies_subject)
+    probab_body = getProbabilities(body, learning_frequencies_body)
+    probab = dict()
+    for key in ['spam', 'legit']:
+        probab[key] = probab_body[key]*probab_subject[key]
+    return max(probab, key=probab.get)
+
+
+def validateForGivenPart(dataset, testing_part, subject_frequencies, body_frequencies):
+    spam_freq_subject = subject_frequencies['spam']
+    legit_freq_subject = subject_frequencies['legit']
+    spam_freq_body = body_frequencies['spam']
+    legit_freq_body = body_frequencies['legit']
+    # print(spam_freq_body.keys())
+
+    test_emails_body = dataset[testing_part]['body']
+    test_emails_subject = dataset[testing_part]['subject']
+
+    parts = ['part%d' % i for i in range(1,11)]
+    learning_frequencies_spam_subject = dict()
+    learning_frequencies_legit_subject = dict()
+    learning_frequencies_spam_body = dict()
+    learning_frequencies_legit_body = dict()
+    for part in parts:
+        if part == testing_part:
+            continue
+        learning_frequencies_spam_subject = mergeDictionaries(learning_frequencies_spam_subject, spam_freq_subject[part])
+        learning_frequencies_legit_subject = mergeDictionaries(learning_frequencies_legit_subject, legit_freq_subject[part])
+        learning_frequencies_spam_body = mergeDictionaries(learning_frequencies_spam_body, spam_freq_body[part])
+        learning_frequencies_legit_body = mergeDictionaries(learning_frequencies_legit_body, legit_freq_body[part])
+
+    learning_frequencies_spam_subject = sumarize(learning_frequencies_spam_subject)
+    learning_frequencies_legit_subject = sumarize(learning_frequencies_legit_subject)
+    learning_frequencies_spam_body = sumarize(learning_frequencies_spam_body)
+    learning_frequencies_legit_body = sumarize(learning_frequencies_legit_body)
+
+    # email = dataset[testing_part]['body'][0]
+    idx = 0
+    results = []
+    for subject, body in zip(test_emails_subject, test_emails_body):
+        res = predict(subject, body, (learning_frequencies_spam_subject, learning_frequencies_legit_subject),
+                                    (learning_frequencies_spam_body, learning_frequencies_legit_body))
+        correct = 1 if res == dataset[testing_part]['target'][idx] else 0
+        results.append(correct)
+        idx += 1
+
+    return np.mean(results)
+
 
 if __name__ == "__main__":
-    pass
+    # email = readEmail("Bayes/pu1/part1/121spmsg62.txt")
+    # print(email)
+    # dataset = readFolder("Bayes/pu1/part1/")
+    # print(dataset)
+    dataset = getDatasets("Bayes/pu1/")
+    # print(dataset['part3'])
+    # print(getWordsFrequencies(dataset['part3']['body'][0]))
+    # pprint(getWrodsTableFrequencies(dataset['part3']['body']))
+    # print(dataset['part3'].loc[dataset['part3']['target'] == 'spam'])
+    body_frequencies = prepareDataset(dataset, column='body')
+    subject_frequencies = prepareDataset(dataset, column='subject')
+
+    # for part in ['part%d' % i for i in range(1, 11)]:
+    #     res = validateForGivenPart(dataset, part, subject_frequencies, body_frequencies)
+    #     print(res)
+
+    res = validateForGivenPart(dataset, 'part1', subject_frequencies, body_frequencies)
+    print(res)
+
+    # print(res[0])
+    # print(res[1])
+    # for idx in range(20):
+    #     email = dataset['part1']['body'][idx]
+    #     target = dataset['part1']['target'][idx]
+    #     # print(email)
+    #     prob = predict(email, res)
+    #     print(prob, target)
+    # print(getProbability(0.2, 0, 1))
