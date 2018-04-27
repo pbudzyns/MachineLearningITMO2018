@@ -45,7 +45,7 @@ class CrossValidator:
             for key in self.parts.keys():
                 if key == part:
                     continue
-                learning_features = np.append(learning_features, self.parts[key][0])
+                learning_features = np.append(learning_features, self.parts[key][0], axis=0)
                 learning_labels = np.append(learning_labels, self.parts[key][1])
 
             yield learning_features, test_features, learning_labels, test_labels
