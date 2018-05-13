@@ -28,6 +28,7 @@ def read_data(filename):
     return np.array(data), np.array(labels)
 
 
+
 if __name__ == '__main__':
 
     points, labels = read_data('chips.txt')
@@ -53,4 +54,7 @@ if __name__ == '__main__':
     print('Score sklearn: ', np.mean(scores))
     print('Score my: ', np.mean(scores2))
     print('F_score my: ', np.mean(f_score))
-    # print(np.ndim(points[0]))
+
+    # TODO: Getting confusion matrix for SVM algorithm
+
+    # TODO: Use Wilcoxon test to compare SVM and KNN and calculate p-value
