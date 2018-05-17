@@ -13,6 +13,7 @@ class SVM:
         self.b = None
         self.alphas = None
         self.w = None
+        self.confusions = {'TP': 0, 'TN': 0, 'FP': 0, 'FT': 0}
 
     def fit(self, X, y, C=1, kernel='linear', tol=0.00001, max_iter=5):
         self.data = X[:]
@@ -108,7 +109,7 @@ class SVM:
         p = np.dot(X, self.w.T) + self.b
         predictions[p >= 0] = 1
         predictions[p < 0] = 0
-        return predictions
+        return np.ndarray.flatten(predictions)
 
     def score(self, X, y):
         # TODO: complete function for accuracy measuring
@@ -124,6 +125,24 @@ class SVM:
         predictions = self.predict(X)
 
         return f1_score(y, predictions)
+
+    def get_confusions(self, X, y):
+        predictions = self.predict(X)
+        confusions = {'TP': 0, 'TN': 0, 'FP': 0, 'FN': 0}
+
+        for prediction, target in zip(predictions, y):
+            if prediction == 1:
+                if target == 1:
+                    confusions['TP'] += 1
+                elif target == 0:
+                    confusions['FP'] += 1
+            elif prediction == 0:
+                if target == 1:
+                    confusions['FN'] += 1
+                elif target == 0:
+                    confusions['TN'] += 1
+
+        return confusions
 
     def _apply_kernel(self):
         if self.kernel == 'linear':

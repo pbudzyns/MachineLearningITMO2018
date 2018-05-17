@@ -39,6 +39,24 @@ class KNN:
         predictions = self.predict(X)
         return f1_score(y, predictions)
 
+    def get_confusions(self, X, y):
+        predictions = self.predict(X)
+        confusions = {'TP': 0, 'TN': 0, 'FP': 0, 'FN': 0}
+
+        for prediction, target in zip(predictions, y):
+            if prediction == 1:
+                if target == 1:
+                    confusions['TP'] += 1
+                elif target == 0:
+                    confusions['FP'] += 1
+            elif prediction == 0:
+                if target == 1:
+                    confusions['FN'] += 1
+                elif target == 0:
+                    confusions['TN'] += 1
+
+        return confusions
+
     def _predict(self, X):
         results = PriorityQueue()
         for point, label in zip(self.features, self.targets):
