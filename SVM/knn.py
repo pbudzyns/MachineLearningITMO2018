@@ -1,6 +1,7 @@
 from queue import PriorityQueue
 from sklearn.metrics import f1_score
 import numpy as np
+from sklearn.model_selection import train_test_split
 
 
 class KNN:
@@ -9,14 +10,28 @@ class KNN:
         self.features = None
         self.targets = None
         self.kernel = None
-        self.k = 2
+        self.k = 0
         self._kernels = [self.exp, self.nok, self.myk]
 
-    def fit(self, X, y, k=2, kernel=None):
+    def fit(self, X, y, k_max=20, kernel=None):
+        # self.features = X
+        # self.targets = y
+        self.kernel = self._get_kernel(kernel)
+        best_k = 1
+        bes_acc = 0
+
+        train_data, test_data, train_labels, test_labels = train_test_split(X, y, test_size=0.2)
+        for k in range(1, k_max+1):
+            self.features = train_data
+            self.targets = train_labels
+            acc = self.score(test_data, test_labels)
+            if acc > bes_acc:
+                bes_acc = acc
+                best_k = k
+
+        self.k = best_k
         self.features = X
         self.targets = y
-        self.k = k
-        self.kernel = self._get_kernel(kernel)
 
     def predict(self, X):
         if np.ndim(X) > 1:
