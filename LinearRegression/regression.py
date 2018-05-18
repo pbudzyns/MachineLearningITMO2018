@@ -193,7 +193,7 @@ def main(filename):
                 thetas, mu, sigma, errors = startTraining(features, prices, iterNum, delta)
                 print('Training finished...')
                 print('Final equation: %.2f*area + %.2f*rooms + %.2f'%(thetas[1], thetas[2], thetas[0]))
-                # print('Matrix method res: %.2f*area + %.2f*rooms + %.2f'%(matrix_thetas[1], matrix_thetas[2], matrix_thetas[0]))
+                print('Matrix method res: %.2f*area + %.2f*rooms + %.2f'%(matrix_thetas[1], matrix_thetas[2], matrix_thetas[0]))
             elif opt == 'p':
                 plotDataAfterLearning(features, mu, sigma, prices, thetas, errors, matrix_thetas)
             elif opt == 'k':

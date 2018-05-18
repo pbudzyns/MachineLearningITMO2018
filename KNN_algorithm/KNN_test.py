@@ -160,24 +160,24 @@ def lin(x, y=None):
     return val
 
 
-def myk(x, y=None):
+def myk(x):
     return 1/x
 
 
-def exp(x, y=None):
-    return np.exp(-(x-8))
+def exp(x, m=8):
+    return np.exp(-(x-m))
 
 
-def poli(x, y=None):
-    val = skl.metrics.pairwise.polynomial_kernel(x, y)[0][0]
-    # val = 1/(x**2)
-    return val
+# def poli(x, y=None):
+#     val = skl.metrics.pairwise.polynomial_kernel(x, y)[0][0]
+#     val = 1/(x**2)
+    # return val
 
 
-def gaus(x, y=None):
-    # val = skl.metrics.pairwise.sigmoid_kernel([x], [y], gamma=0.1, coef0=0)[0][0]
-    val = skl.metrics.pairwise.sigmoid_kernel(x, y, gamma=None, coef0=0.2)[0][0]
-    return val
+# def gaus(x, y=None):
+#     val = skl.metrics.pairwise.sigmoid_kernel([x], [y], gamma=0.1, coef0=0)[0][0]
+    # val = skl.metrics.pairwise.sigmoid_kernel(x, y, gamma=None, coef0=0.2)[0][0]
+    # return val
 
 
 def nok(x, y=None):
@@ -187,14 +187,14 @@ def nok(x, y=None):
 def get_kernel(kernel_name):
     kernel = None
 
-    for func in [lin, gaus, myk, poli, nok]:
+    for func in [myk, nok, exp]:
         if kernel_name == func.__name__:
             return func
     return kernel
 
 
 def test_kernels(dist):
-    for func in [lin, gaus, myk, poli, nok]:
+    for func in [myk, nok, exp]:
         print(func.__name__, ': ', func(dist))
 
 
@@ -213,7 +213,7 @@ def main(filename):
     base_points, base_labels = read_data(filename)
     points, labels = base_points[:], base_labels[:]
     crsVal = CrossValidator(points, labels)
-    crsVal.splitDataIntoParts(10)
+    crsVal.splitDataIntoParts(118)
     test_points, test_labels = [], []
     kernels_list = [nok, myk, exp]
     printMenu()
@@ -241,16 +241,14 @@ def main(filename):
 
         elif opt == 'k':
             k_max = int(input('Neighbors number: '))
+            for k in range(1,k_max+1):
+                for kernel in kernels_list:
+                    F_scores = []
+                    for points, test_points, labels, test_labels in crsVal.getValidationPart():
+                        _, F1, result = test_knn(k, kernel, points, labels, test_points, test_labels)
+                        F_scores.append(F1)
 
-
-
-            for kernel in kernels_list:
-                F_scores = []
-                for points, test_points, labels, test_labels in crsVal.getValidationPart():
-                    _, F1, result = test_knn(k_max, kernel, points, labels, test_points, test_labels)
-                    F_scores.append(F1)
-
-                print("{} | NN: {} | Score: {}".format(kernel.__name__, k_max, np.mean(F_scores)))
+                    print("{} | NN: {} | Score: {}".format(kernel.__name__, k, np.mean(F_scores)))
 
 
         elif opt == 'h':

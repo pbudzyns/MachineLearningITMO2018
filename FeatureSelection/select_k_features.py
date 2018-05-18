@@ -1,5 +1,5 @@
 import numpy as np
-from FeatureSelection.metrics import chi2, mutual, pearson, f_classif
+from FeatureSelection.metrics import chi2, mutual, pearson, f_classif, random
 from queue import PriorityQueue
 from sklearn.svm import SVC
 np.warnings.filterwarnings('ignore')
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     arcene_valid_data = load_data('arcene/arcene_valid.data')
     arcene_valid_labels = load_data('arcene/arcene_valid.labels')
 
-    metrics = [chi2, f_classif, mutual, pearson]
+    metrics = [chi2, f_classif, mutual, pearson, random]
     # metrics = [pearson]
     # featureFilter = SelectKFeatures(score_func=chi2, k=10)
     # featureFilter.fit(arcene_train_data, arcene_train_labels)
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     # print(test.transform([arcene_train_data[0]]))
 
     for metric in metrics:
-        featureFilter = SelectKFeatures(score_func=metric, k=6)
+        featureFilter = SelectKFeatures(score_func=metric, k=5)
         featureFilter.fit(arcene_train_data, arcene_train_labels)
 
         new_features = featureFilter.transform(arcene_train_data)

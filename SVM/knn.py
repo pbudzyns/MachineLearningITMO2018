@@ -17,19 +17,19 @@ class KNN:
         # self.features = X
         # self.targets = y
         self.kernel = self._get_kernel(kernel)
-        best_k = 1
-        bes_acc = 0
+        # best_k = 1
+        # bes_acc = 0
+        #
+        # train_data, test_data, train_labels, test_labels = train_test_split(X, y, test_size=0.2)
+        # for k in range(1, k_max+1):
+        #     self.features = train_data
+        #     self.targets = train_labels
+        #     acc = self.score(test_data, test_labels)
+        #     if acc > bes_acc:
+        #         bes_acc = acc
+        #         best_k = k
 
-        train_data, test_data, train_labels, test_labels = train_test_split(X, y, test_size=0.2)
-        for k in range(1, k_max+1):
-            self.features = train_data
-            self.targets = train_labels
-            acc = self.score(test_data, test_labels)
-            if acc > bes_acc:
-                bes_acc = acc
-                best_k = k
-
-        self.k = best_k
+        self.k = k_max
         self.features = X
         self.targets = y
 

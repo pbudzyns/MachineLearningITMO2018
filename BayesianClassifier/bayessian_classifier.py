@@ -1,9 +1,9 @@
 import numpy as np
 import scipy.stats
+import scipy.special
 import glob
 from pandas import DataFrame
 import copy
-from pprint import pprint
 
 
 """ The third lab will be devoted to the naive Bayesian classifier.
@@ -121,16 +121,21 @@ def sumarize(frequencies):
 def getProbability(x, mu, sigma):
     if sigma == 0:
         return 1
-    prob = scipy.stats.norm(mu, sigma).pdf(x)
+    # prob = (scipy.special.erf((x-mu)/(sigma*(2**(1/2)))) + 1)/2
+    prob = scipy.stats.norm(mu, sigma).cdf(x)
+    # print(prob)
     return prob
 
 
 def classMembershipProbab(test_freq, learning_data):
-    probability = 1
+    # probability = 1
+    probabs = []
     for word, freq in test_freq.items():
-        mu, sigma = learning_data.get(word, (1, 1))
-        probability *= getProbability(freq, mu, sigma)
-    return probability
+        mu, sigma = learning_data.get(word, (0, 1))
+        # probability += np.log(getProbability(freq, mu, sigma))
+        probabs.append(getProbability(freq, mu, sigma))
+    # return probability
+    return np.sum(np.log((np.array(probabs))))
 
 
 def getProbabilities(email, learning_dataset):
@@ -150,9 +155,13 @@ def predict(subject, body, learning_frequencies_subject, learning_frequencies_bo
     probab_subject = getProbabilities(subject, learning_frequencies_subject)
     probab_body = getProbabilities(body, learning_frequencies_body)
     probab = dict()
+
     for key in ['spam', 'legit']:
-        probab[key] = probab_body[key]*probab_subject[key]
-    return max(probab, key=probab.get)
+        probab[key] = probab_body[key] + probab_subject[key]
+        # print(probab_body[key], probab_subject[key])
+    # print(probab)
+    probab['spam'] += 20
+    return min(probab, key=probab.get)
 
 
 def validateForGivenPart(dataset, testing_part, subject_frequencies, body_frequencies):
@@ -183,45 +192,38 @@ def validateForGivenPart(dataset, testing_part, subject_frequencies, body_freque
     learning_frequencies_spam_body = sumarize(learning_frequencies_spam_body)
     learning_frequencies_legit_body = sumarize(learning_frequencies_legit_body)
 
-    # email = dataset[testing_part]['body'][0]
+
     idx = 0
+    legit_spam_idx = 0
     results = []
     for subject, body in zip(test_emails_subject, test_emails_body):
         res = predict(subject, body, (learning_frequencies_spam_subject, learning_frequencies_legit_subject),
                                     (learning_frequencies_spam_body, learning_frequencies_legit_body))
         correct = 1 if res == dataset[testing_part]['target'][idx] else 0
+        if dataset[testing_part]['target'][idx] == 'legit' and res == 'spam':
+            legit_spam_idx += 1
+
         results.append(correct)
         idx += 1
 
+    print('Legit classified as spam: ', legit_spam_idx)
     return np.mean(results)
 
 
 if __name__ == "__main__":
-    # email = readEmail("Bayes/pu1/part1/121spmsg62.txt")
-    # print(email)
-    # dataset = readFolder("Bayes/pu1/part1/")
-    # print(dataset)
+
     dataset = getDatasets("Bayes/pu1/")
-    # print(dataset['part3'])
-    # print(getWordsFrequencies(dataset['part3']['body'][0]))
-    # pprint(getWrodsTableFrequencies(dataset['part3']['body']))
-    # print(dataset['part3'].loc[dataset['part3']['target'] == 'spam'])
+
     body_frequencies = prepareDataset(dataset, column='body')
     subject_frequencies = prepareDataset(dataset, column='subject')
 
+    # temp = []
     # for part in ['part%d' % i for i in range(1, 11)]:
+    #     print('Testing for', part, ': ', end='')
     #     res = validateForGivenPart(dataset, part, subject_frequencies, body_frequencies)
-    #     print(res)
+    #     print(round(res, 2))
+    #     temp.append(res)
+    # print('Average: ', np.mean(temp))
 
     res = validateForGivenPart(dataset, 'part1', subject_frequencies, body_frequencies)
     print(res)
-
-    # print(res[0])
-    # print(res[1])
-    # for idx in range(20):
-    #     email = dataset['part1']['body'][idx]
-    #     target = dataset['part1']['target'][idx]
-    #     # print(email)
-    #     prob = predict(email, res)
-    #     print(prob, target)
-    # print(getProbability(0.2, 0, 1))

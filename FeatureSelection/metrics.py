@@ -30,3 +30,13 @@ def pearson(x, y):
     for i in range(n):
         scores[i] = pearsonr(x[:, i], y)
     return scores[:, 0], scores[:, 1]
+
+def random(x, y):
+    from random import random as _rand
+    m, n = np.shape(x)
+    scores = np.zeros((m,1))
+    for i in range(m):
+        scores[i] = _rand()
+
+    return scores, None
+

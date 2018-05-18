@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 class SVM:
     """
-        Simplified version if SMO algorithm for training SVMs.
+        Simplified version of SMO algorithm for training SVMs.
     """
 
     def __init__(self):
@@ -33,49 +33,26 @@ class SVM:
         self.targets = np.reshape(self.targets, (len(self.targets), 1))
 
         # Variables
+        # What we look for are non-negative alpha coefficients
         self.alphas = np.zeros((m, 1))
         self.b = 0
         E = np.zeros((m, 1))
         passes = 0
 
-        lh_coutn, eta_count, old_alph = 0, 0, 0
-        iterations = 0
-        passed_if = 0
-
-        # Pre-computing kernel martix
+        # Pre-computing kernel matrix
         K = self._apply_kernel()
         while passes < max_iter:
             num_changed_alphas = 0
 
             for i in range(m):
-                iterations += 1
 
                 # Calculate Ei = f(x(i) - y(i))
-                # print('targets: ', np.shape(self.targets))
-                # print('alphas: ', np.shape(self.alphas))
-                # print('K: ', np.shape(K[:, i]))
-
-                # tmp = np.multiply(self.alphas, self.targets)
-                # tmp = self.alphas * self.targets * k
-                # print(np.shape(tmp))
-
-
-                # assert False
                 k = np.reshape(K[:, i][:], (len(K[:, i]), 1))
-                tmp = self.b + np.sum(self.alphas * self.targets * k) - self.targets[i]
-                E[i] = tmp.copy()
+                E[i] = self.b + np.sum(self.alphas * self.targets * k) - self.targets[i]
 
-                # print(np.shape(self.alphas[i]))
-                # assert False
-                # print('IF')
-                # print(self.targets[i]*E[i], ' < ',  -tol, '=', self.targets[i]*E[i] < -tol)
-                # print(self.alphas[i] , '< ',  C, '=', self.alphas[i] < C)
-                # print(self.targets[i]*E[i], ' > ',  tol, '=', self.targets[i]*E[i] > tol)
-                # print(self.alphas[i], ' > ',  0, ' = ', self.alphas[i] > 0)
                 if (self.targets[i]*E[i] < -tol and self.alphas[i] < C)\
                         or (self.targets[i]*E[i] > tol and self.alphas[i] > 0):
-                # if True:
-                    passed_if += 1
+                    # Picking up two weights to find most promising pairs
                     # Randomly select j index and avoid same indexes
                     j = randint(0, m-1)
                     while j == i:
@@ -83,64 +60,45 @@ class SVM:
 
                     # Calculate Ej = f(x(j) - y(j))
                     k = np.reshape(K[:, j][:], (len(K[:, j]), 1))
-                    tmp = self.b + np.sum(self.alphas * self.targets * k) - self.targets[j]
-                    E[j] = tmp.copy()
+                    E[j] = self.b + np.sum(self.alphas * self.targets * k) - self.targets[j]
 
                     alpha_i_old = self.alphas[i].copy()
                     alpha_j_old = self.alphas[j].copy()
-                    # print('old i: ', alpha_i_old)
-                    # print('old j: ', alpha_j_old)
 
+                    # Looking for a point as close as
                     if self.targets[i] == self.targets[j]:
-                        tmp = (self.alphas[j].copy() + self.alphas[i].copy())
-                        L = max(0, tmp - C)
-                        H = min(C, tmp)
-                        # print('i=j, L=', L, ' H=', H)
+                        L = max(0, self.alphas[j] + self.alphas[i] - C)
+                        H = min(C, self.alphas[j] + self.alphas[i])
                     else:
-                        tmp = (self.alphas[j].copy() - self.alphas[i].copy())
-                        # print('tmp: ', tmp)
-                        L = max(0, tmp)
-                        H = min(C, C + tmp)
-                        # print('i!=j, L=', L, ' H=', H)
+                        L = max(0, self.alphas[j] - self.alphas[i])
+                        H = min(C, C + self.alphas[j] - self.alphas[i])
 
                     if H == L:
-                        # lh_coutn += 1
                         continue
 
-                    eta = 2 * K[i, j].copy() - K[i, i].copy() - K[j, j].copy()
+                    eta = 2 * K[i, j] - K[i, i] - K[j, j]
 
                     if eta >= 0:
-                        # print('eta: ', eta)
-                        eta_count += 1
                         continue
 
-                    tmp = self.alphas[j].copy() - (self.targets[j].copy() * (E[i].copy() - E[j].copy())) / eta
-                    # print(self.alphas[j], self.targets[j], E[i], E[j], eta)
-                    # print('H ', H, 'L ', L, 'tmp ', tmp)
-                    self.alphas[j] = tmp.copy()
+                    self.alphas[j] = self.alphas[j] - (self.targets[j] * (E[i] - E[j])) / eta
 
-                    self.alphas[j] = min(H, self.alphas[j].copy())
-                    self.alphas[j] = max(L, self.alphas[j].copy())
+                    # Clipping
+                    self.alphas[j] = min(H, self.alphas[j])
+                    self.alphas[j] = max(L, self.alphas[j])
 
-                    # print('alha current, old', self.alphas[j], alpha_j_old)
                     if abs(self.alphas[j] - alpha_j_old) < tol:
-                        self.alphas[j] = alpha_j_old.copy()
-                        # print('Quiting: alpha_j_old')
-                        # old_alph += 1
+                        self.alphas[j] = alpha_j_old
                         continue
 
+                    self.alphas[i] = self.alphas[i] + self.targets[i]*self.targets[j]*(alpha_j_old - self.alphas[j])
 
-                    tmp = self.alphas[i].copy() + self.targets[i]*self.targets[j]*(alpha_j_old - self.alphas[j])
-                    self.alphas[i] = tmp
-
-                    tmp = self.b - E[i].copy()\
-                        - self.targets[j].copy() * (self.alphas[i].copy() - alpha_i_old) * K[i, j].copy()\
-                        - self.targets[j].copy() * (self.alphas[j].copy() - alpha_j_old) * K[i, j].copy()
-                    b1 = tmp.copy()
-                    tmp = self.b - E[j]\
-                        - self.targets[i].copy() * (self.alphas[i].copy() - alpha_i_old).copy() * K[i, j].copy()\
-                        - self.targets[j].copy() * (self.alphas[j].copy() - alpha_j_old).copy() * K[j, j].copy()
-                    b2 = tmp.copy()
+                    b1 = self.b - E[i]\
+                        - self.targets[j] * (self.alphas[i] - alpha_i_old) * K[i, j]\
+                        - self.targets[j] * (self.alphas[j] - alpha_j_old) * K[i, j]
+                    b2 = self.b - E[j]\
+                        - self.targets[i] * (self.alphas[i] - alpha_i_old) * K[i, j]\
+                        - self.targets[j] * (self.alphas[j] - alpha_j_old) * K[j, j]
 
                     if 0 < self.alphas[i] < C:
                         self.b = b1
@@ -161,7 +119,6 @@ class SVM:
         self.targets = self.targets[idx]
         self.alphas = self.alphas[idx]
         self.w = np.dot((self.alphas*self.targets).T, self.data)
-        self.K = K
 
     def predict(self, X):
         # TODO: coplete predicting function
@@ -176,16 +133,15 @@ class SVM:
                 pred = 0
                 for j in range(l):
                     pred = pred \
-                           + self.alphas[j].copy() * self.targets[j]\
+                           + self.alphas[j] * self.targets[j]\
                            * self._gausian_kernel(X[i, :], self.data[j, :])
-                p[i] = float(pred.copy() + self.b.copy())
+                p[i] = pred + self.b
 
         predictions[p >= 0] = 1
         predictions[p < 0] = 0
         return np.ndarray.flatten(predictions)
 
     def score(self, X, y):
-        # TODO: complete function for accuracy measuring
         predictions = self.predict(X)
         correct = 0
         for pred, target in zip(predictions, y):
@@ -194,7 +150,6 @@ class SVM:
         return correct/len(y)
 
     def f_score(self, X, y):
-        # TODO: complete function for f_score
         predictions = self.predict(X)
 
         return f1_score(y, predictions)
@@ -230,20 +185,10 @@ class SVM:
 
         xx, yy = np.meshgrid(x, y)
         values = np.zeros(np.shape(xx))
-        from sklearn.svm import SVC
-        # model = SVC(C=1.0, kernel='rbf')
-        # model.fit(points, labels)
 
         for i in range(np.size(xx, 1)):
             tmp_x = np.c_[xx[:, i], yy[:, i]]
             values[:, i] = model.predict(tmp_x)
-
-            # print(values[:, i])
-            # assert False
-            # values[:, i] = model.predict(tmp_x)
-            # print('MY: ', self.predict(tmp_x))
-            # print('SKL: ', model.predict(tmp_x))
-
 
         plt.contour(xx, yy, values)
 
@@ -253,16 +198,12 @@ class SVM:
         K = None
         if self.kernel == 'linear':
             K = np.dot(self.data, self.data.T)
-        # elif self.kernel == 'gaussian':
-        #     x2 = np.sum(self.data**2, axis=1)
-        #     K = x2 + (x2.T - 2*np.dot(self.data, self.data.T))
-        #     K = self._gausian_kernel(1, 0, sigma=2) ** K
         elif self.kernel == 'gaussian':
             m, n = np.shape(self.data)
             K = np.zeros((m, m))
             for i in range(m):
                 for j in range(i, m):
-                    K[i, j] = self._gausian_kernel(self.data[i, :], self.data[j, :]).copy()
+                    K[i, j] = self._gausian_kernel(self.data[i, :], self.data[j, :])
                     K[j, i] = K[i, j]
         return K
 
